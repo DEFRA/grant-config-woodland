@@ -1,6 +1,6 @@
 {
   "name": "grant-config-woodland",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Grant config for woodland grant",
   "engines": {
     "node": ">=24"
