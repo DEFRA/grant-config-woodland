@@ -1,5 +1,11 @@
 # grant-config-woodland
 
+## 0.0.3
+
+### Patch Changes
+
+- 855ae92: Enable protected workflow
+
 ## 0.0.2
 
 ### Patch Changes
