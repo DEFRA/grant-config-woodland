@@ -18,7 +18,7 @@
     "github:release": "npx cdp-github-release grant-config-woodland",
     "publish:changed": "changeset publish",
     "version:changed": "changeset version",
-    "version:create": "changeset"
+    "version": "changeset"
   },
   "author": "Defra Future-Grants-Framework Team",
   "license": "OGL-UK-3.0",
