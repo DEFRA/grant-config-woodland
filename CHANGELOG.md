@@ -1,5 +1,11 @@
 # grant-config-woodland
 
+## 0.1.0
+
+### Minor Changes
+
+- dee2ee2: Woodland config includes CW and GAS
+
 ## 0.0.3
 
 ### Patch Changes
