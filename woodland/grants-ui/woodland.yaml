@@ -2,7 +2,9 @@ engine: V2
 name: Woodland Management Plan
 metadata:
   id: 95e92559-968d-44ae-8666-2b1ad3dffd38
-  enabledInProd: false
+  enabledInProd: true
+  whitelistCrnEnvVar: WOODLAND_WHITELIST_CRNS
+  whitelistSbiEnvVar: WOODLAND_WHITELIST_SBIS
   referenceNumberPrefix: WMP
   submission:
     grantCode: woodland
@@ -45,6 +47,7 @@ metadata:
         gasStatus: default
         toGrantsStatus: SUBMITTED
         toPath: /confirmation
+  supportEmail: ruralpayments@defra.gov.uk
   detailsPage:
     confirmationFieldName: businessDetailsUpToDate
     toleratedFailurePaths:
@@ -62,7 +65,33 @@ metadata:
                 - path: name
                   fields:
                     - path: first
+                    - path: middle
                     - path: last
+                - path: email
+                  fields:
+                    - path: address
+                - path: phone
+                  fields:
+                    - path: mobile
+                    - path: landline
+                - path: address
+                  fields:
+                    - path: line1
+                    - path: line2
+                    - path: line3
+                    - path: line4
+                    - path: line5
+                    - path: street
+                    - path: city
+                    - path: postalCode
+                    - path: uprn
+                    - path: county
+                    - path: buildingName
+                    - path: buildingNumberRange
+                    - path: dependentLocality
+                    - path: doubleDependentLocality
+                    - path: flatName
+                    - path: pafOrganisationName
         - name: business
           variableName: sbi
           variableSource: credentials.sbi
@@ -97,42 +126,45 @@ metadata:
                     - path: flatName
                     - path: pafOrganisationName
                 - path: vat
-            - path: countyParishHoldings
-              fields:
-                - path: cphNumber
     responseMapping:
       business: data.business.info
-      countyParishHoldings: data.business.countyParishHoldings[0].cphNumber
       customer: data.customer.info
     displaySections:
-      - title: Applicant details
+      - title: Business contact details
         fields:
-          - label: Applicant name
-            sourcePath: customer.name
-            format: fullName
-      - title: Organisation details
-        description: If your application is successful, the following organisation will receive the Woodland Management Plan grant.
-        fields:
-          - label: Organisation name
+          - label: Business name
             sourcePath: business.name
-          - label: Single Business Identifier (SBI) number
-            sourceType: credentials
-            sourcePath: sbi
-          - label: Organisation email
-            sourcePath: business.email.address
-          - label: Mobile phone number
-            sourcePath: business.phone.mobile
-          - label: Landline phone number
-            sourcePath: business.phone.landline
-          - label: Organisation address
+          - label: Business address
             sourcePath: business.address
             format: address
+          - label: Business phone numbers
+            sourcePath: business.phone
+            format: phoneNumbers
+          - label: Business email address
+            sourcePath: business.email.address
+      - title: Reference numbers
+        fields:
+          - label: Single Business Identifier (SBI)
+            sourceType: credentials
+            sourcePath: sbi
           - label: VAT registration number
             sourcePath: business.vat
-      - title: County parish holding (CPH) numbers
+      - title: Personal details
         fields:
-          - label: CPH number
-            sourcePath: countyParishHoldings
+          - label: Full name
+            sourcePath: customer.name
+            format: fullName
+          - label: Customer reference number
+            sourceType: credentials
+            sourcePath: crn
+          - label: Personal address
+            sourcePath: customer.address
+            format: address
+          - label: Personal phone numbers
+            sourcePath: customer.phone
+            format: phoneNumbers
+          - label: Personal email address
+            sourcePath: customer.email.address
   tasklist:
     completeInOrder: true
     returnAfterSection: true
@@ -151,38 +183,24 @@ metadata:
     panelTitle: 'Application submitted'
     panelText: 'Application reference number'
     html: |
-      <p class="govuk-body">We've sent a confirmation email.</p>
-      <h2 class="govuk-heading-m">What happens next</h2>
       <p class="govuk-body">We've received your application.</p>
-      <p class="govuk-body">We'll be in contact to say if your application has been successful or to ask for more information.</p>
-      <p class="govuk-body">If successful, we'll send you a grant funding agreement (GFA).</p>
-
-      <details class="govuk-details" data-module="govuk-details">
-        <summary class="govuk-details__summary">
-          <span class="govuk-details__summary-text">
-            If you have a question
-          </span>
-        </summary>
-        <div class="govuk-details__text">
-          <p class="govuk-body">Contact the Rural Payments Agency if you have a query.</p>
-          <p class="govuk-body">
-            Telephone: 03000 200 301<br>
-            Monday to Friday, 8:30am to 5pm (except bank holidays)</p>
-          <p class="govuk-body"><a class="govuk-link" href="https://www.gov.uk/call-charges" target="_blank">Find out about call charges (opens in new tab)</a></p>
-          <p class="govuk-body">Email: <a class="govuk-link" href="mailto:ruralpayments@defra.gov.uk">ruralpayments@defra.gov.uk</a></p>
-        </div>
-      </details>
+      <h2 class="govuk-heading-m">What happens next</h2>
+      <p class="govuk-body">We'll be in contact to offer you an agreement, or to ask for more information.</p>
+      <p class="govuk-body"><a class="govuk-link" href="/{{SLUG}}/print-submitted-application" target="_blank">View / Print submitted application (opens in new tab)</a></p>
+  printPage:
+    showApplicantDetails: true
   incorrectDetailsContent:
     heading: Update your details
     paragraphs:
-      - Make sure your details are correct before you apply for a woodland management plan (WMP) grant.
+      - Make sure your details are correct before you apply for a woodland management plan (WMP).
       - textBefore: 'To update your details follow our '
         link:
           text: Register and update your details with the Rural Payments Agency guidance
-          href: https://www.gov.uk/guidance/update-personal-and-business-details-in-the-rural-payments-service
+          href: https://www.gov.uk/guidance/update-personal-and-business-details-in-the-rural-payments-service#what-personal-details-you-can-update
         textAfter: '.'
     showRpaSupport: false
-
+  options:
+    submitButtonText: Save and continue
 sections:
   - name: business-details
     title: Your details
@@ -243,12 +261,13 @@ pages:
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Land registration
+        shortDescription: All land registered
 
   # 2. Exit - land not registered
   - title: All the land in your application must be registered with the Rural Payments service
     id: e692dbd0-57ec-4237-90fd-1bac172c9f94
     path: /exit-eligibility-land-registered
+    section: 16848e5e-ba30-4719-aa98-f0e1144fb492
     controller: TerminalPageController
     condition: f64f8509-4b15-48a1-b301-5463f23e8b42
     components:
@@ -260,30 +279,35 @@ pages:
           <p class="govuk-body">This includes funding schemes such as the Sustainable Farming Incentive (SFI) and Countryside Stewardship (CS) Higher Tier and Capital Grants.</p>
           <h2 class="govuk-heading-m">Check land parcels</h2>
           <p class="govuk-body">All land parcels listed in your application must be registered on your digital maps in the Rural Payments service and have a parcel reference number (in the format AA1234 5678) before you apply.</p>
-          <p class="govuk-body">To find out if your land parcels are registered and up to date follow our <a class="govuk-link" href="https://www.gov.uk/guidance/digital-maps-in-the-rural-payments-service-check-and-change-mapping-updates" target="_blank">Digital maps in the Rural Payments service: check and change your maps guidance (opens in new tab)</a>.</p>
+          <p class="govuk-body">To find out if your land parcels are registered and up to date follow our <a class="govuk-link" href="https://www.gov.uk/guidance/digital-maps-in-the-rural-payments-service-check-and-change-mapping-updates">Digital maps in the Rural Payments service: check and change your maps guidance</a>.</p>
           <h2 class="govuk-heading-m">Register land parcels</h2>
           <p class="govuk-body">If your land parcels are not registered, you must register the land and wait for this to be completed before applying.</p>
-          <p class="govuk-body">To register land follow our <a class="govuk-link" href="https://www.ruralpayments.service.gov.uk/" target="_blank">Rural Payments service: how to register land and update digital maps guidance (opens in new tab)</a>.</p>
+          <p class="govuk-body">To register land follow our <a class="govuk-link" href="https://www.gov.uk/guidance/rural-payments-service-how-to-register-land-and-update-digital-maps">Rural Payments service: how to register land and update digital maps guidance</a>.</p>
 
   # 3. Management control
-  - title: Will you have management control for the duration of the agreement and, where applicable, the durability period?
+  - title: Management control
     id: 4bdbaa10-d57a-4e94-8a2b-c442658ca4a7
     path: /eligibility-management-control
     section: 16848e5e-ba30-4719-aa98-f0e1144fb492
     controller: TaskPageController
     components:
+      - name: managementControlHtml
+        id: ed805498-03c0-490d-967a-bbf466bf3cdc
+        type: Html
+        content: |
+          <p class="govuk-body">Having management control means you’re the person actively managing the land in your application.</p>
+          <p class="govuk-body">You must have management control of the land in an agreement for 5 years from the agreement start date which includes the durability period. If you do not meet this requirement, you must get the written consent of all other parties who have management control.</p>
       - name: landManagementControl
         id: e0dcf5be-0b8f-4e50-befe-bdfe858e82a6
         type: YesNoField
-        title: Will you have management control for the duration of the agreement and, where applicable, the durability period?
-        hint: Having management control means you're the person actively farming the land in your application. You must have management control of the land in an agreement for 5 years from your agreement start date. The durability period is the period where you must keep all funded capital items in the same condition and to the specification in your agreement, and use them only for the approved grant purpose. This is usually for a minimum of 7 years from the agreement start date.
+        title: Will you have management control of the land in your agreement for 5 years from the start date of the agreement?
         options:
           required: true
           classes: govuk-radios
         shortDescription: Management control
 
   # 4. Countersignature (only shown when management control = no)
-  - title: Have you got the countersignature of your landlord?
+  - title: Have you got the countersignature of the parties who do have management control of the land?
     id: 7498379b-f8f1-4f51-b27e-805f06e0bd6a
     path: /eligibility-countersignature
     section: 16848e5e-ba30-4719-aa98-f0e1144fb492
@@ -293,17 +317,18 @@ pages:
       - name: counterSignature
         id: 040d6021-bc32-4ef8-9cfe-235548157a30
         type: YesNoField
-        title: Have you got the countersignature of your landlord?
-        hint: If your management control or durability period does not cover the duration of your agreement, you need the countersignature and permission of your landlord.
+        title: Have you got the countersignature of the parties who do have management control of the land?
+        hint: If you do not have management control for 5 years from the start of your agreement, you need the countersignature and consent of the parties who do have management control. This is normally your landlord(s).
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Landlord countersignature
+        shortDescription: Countersignature
 
   # 6. Exit - no countersignature
   - title: You must get your landlord's countersignature
     id: ba713319-438e-4609-afbb-2585686bb491
     path: /exit-eligibility-countersignature
+    section: 16848e5e-ba30-4719-aa98-f0e1144fb492
     controller: TerminalPageController
     condition: b9f02e95-e022-4b6d-a8fb-dbe56124c03f
     components:
@@ -311,8 +336,8 @@ pages:
         id: 5af8ba37-9ac6-47a3-a5a9-e9716ab5141e
         type: Html
         content: >
-          <p class="govuk-body">You must get the written consent of all other parties with management control over part or all of the land in your application for the entire duration of the agreement  (and any durability period)</p>
-          <p class="govuk-body">To get countersignatures follow the guidance in and complete our <a class="govuk-link" href="https://www.gov.uk/government/publications/countryside-stewardship-land-ownership-and-control-form" target="_blank">Land ownership and control form: Countryside Stewardship form</a>.</p>
+          <p class="govuk-body">You must get the written consent of all other parties with management control over part or all of the land in your application for the entire duration of the agreement (and any durability period).</p>
+          <p class="govuk-body">To get countersignatures follow the guidance in and complete our <a class="govuk-link" href="https://www.gov.uk/government/publications/countryside-stewardship-land-ownership-and-control-form">Land ownership and control form: Countryside Stewardship form</a>.</p>
           <p class="govuk-body">You must complete a separate form for each countersignatory.</p>
 
   # 7. Tenant
@@ -329,10 +354,10 @@ pages:
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Public body tenancy
+        shortDescription: Public body tenant
 
   # 8. Tenant obligations (conditional - only if tenant = yes)
-  - title: Are the proposed works a requirement of your tenancy or any other legally binding obligation?
+  - title: Is the proposed plan a requirement of your tenancy or any other legally binding obligation?
     id: aa0a2606-ad5b-46db-8c4c-3bf503fa23f9
     path: /eligibility-tenant-obligations
     section: 16848e5e-ba30-4719-aa98-f0e1144fb492
@@ -342,17 +367,18 @@ pages:
       - name: tenantObligations
         id: f025cbb2-920c-4b07-9cfa-d43589369696
         type: YesNoField
-        title: Are the proposed works a requirement of your tenancy or any other legally binding obligation?
+        title: Is the proposed plan a requirement of your tenancy or any other legally binding obligation?
         hint: A legally binding obligation is any requirement on the land in your application which has force in law and can be enforced by the courts and legal system.
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Tenancy obligations
+        shortDescription: Tenancy and legal obligations
 
   # 9. Exit - tenant obligations
-  - title: You cannot get a WMP grant for any proposed works which are a requirement of your tenancy or any other legally binding obligation
+  - title: You cannot apply for a woodland management plan (WMP) for any work that is a requirement of your tenancy or any other legally binding obligation
     id: 566edfd9-2028-490f-8928-0d3b75e7eb4e
     path: /exit-eligibility-tenant-obligations
+    section: 16848e5e-ba30-4719-aa98-f0e1144fb492
     controller: TerminalPageController
     condition: d8ae9ed4-da31-41fb-a5d7-0025cc823c21
     components:
@@ -360,8 +386,8 @@ pages:
         id: 10a8335b-877c-436f-8a0d-e09d6cf53f71
         type: Html
         content: >
-          <p class="govuk-body">To find out more read our
-          <a class="govuk-link" href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#landthat-is-eligible-for-a-wmp" target="_blank">Applicant's guide: PA3 Woodland management plan 2026 guidance</a>.</p>
+          <p class="govuk-body">To find out more read
+          <a class="govuk-link" href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#landreceiving-other-funding">Applicant's guide: PA3 Woodland management plan 2026 guidance</a>.</p>
 
   # 10. Grazing rights
   - title: Are you applying for land covered by common or shared grazing rights?
@@ -377,10 +403,10 @@ pages:
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Grazing rights
+        shortDescription: Common or shared grazing rights
 
   # 11. Valid WMP
-  - title: Do you already have any valid WMPs on any land in your application?
+  - title: Do you already have any live woodland management plans (WMPs) on any land in your application?
     id: 93f46dcc-d0db-484e-9eb6-4ba5766c220d
     path: /eligibility-valid-wmp
     section: 16848e5e-ba30-4719-aa98-f0e1144fb492
@@ -389,14 +415,14 @@ pages:
       - name: appLandHasExistingWmp
         id: e6a99259-82d6-4d2a-a2ec-349e9d473092
         type: YesNoField
-        title: Do you already have any valid WMPs on any land in your application?
+        title: Do you already have any live woodland management plans (WMPs) on any land in your application?
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Existing WMPs
+        shortDescription: Live WMPs on land
 
   # 12. WMP agreement number (conditional - only if valid-wmp = yes)
-  - title: Enter the agreement number for any valid WMPs
+  - title: Enter the FC plan references for any live WMPs
     id: c8cf57d5-b410-4cfe-8bbd-1a912119b7ab
     path: /eligibility-wmp-agreement
     section: 16848e5e-ba30-4719-aa98-f0e1144fb492
@@ -406,17 +432,17 @@ pages:
       - name: existingWmps
         id: a9ae25aa-d70e-4616-84bf-47f71251e8b5
         type: TextField
-        title: Enter the agreement number for any valid WMPs
-        hint: This is the 7-digit number you'll find in your agreement documentation and communications. For example, 1234567. If you need to enter 2 or more agreement numbers, use a comma to separate each agreement number. For example, 1234567, 7654321, 1726354
+        title: Enter the FC plan references for any live WMPs
+        hint: This is the 5, 6 or 7-digit plan reference number you’ll find on your Forestry Commission WMP. If you need to enter 2 or more plan reference numbers, use a comma to separate each one. For example - 1234567, 7654321, 1726354.
         options:
           required: true
           classes: govuk-!-width-two-thirds
           customValidationMessages:
             any.required: Enter the agreement number for your valid WMP
-        shortDescription: WMP agreement number
+        shortDescription: Live WMP plan references
 
   # 13. Higher tier
-  - title: Do you intend to apply for a Countryside Stewardship Higher Tier (CSHT) agreement if your WMP is approved?
+  - title: Countryside Stewardship Higher Tier (CSHT)
     id: 11c06c84-fb48-479e-98e2-27549195e4bd
     path: /eligibility-higher-tier
     section: 16848e5e-ba30-4719-aa98-f0e1144fb492
@@ -425,17 +451,17 @@ pages:
       - name: higherTierGuidance
         id: 50a8fb82-ec37-4c57-83af-81e56aaf4506
         type: Html
-        content: >-
-          <p class="govuk-body">You must have a WMP approved before you can apply for woodland support under CSHT. To find out more read our
-          <a class="govuk-link" href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#landthat-is-eligible-for-a-wmp" target="_blank">Applicant's guide: PA3 Woodland management plan 2026 guidance</a>.</p>
+        content: |
+          <p class="govuk-body">You must have a WMP approved by the Forestry Commission before you can apply for woodland support under CSHT.</p>
+          <p class="govuk-body">To find out more read our <a class="govuk-link" href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#wmp-agreements-and-countryside-stewardship-higher-tier-csht" target="_blank">Applicant's guide: PA3 Woodland management plan 2026 guidance (opens in new tab)</a>.</p>
       - name: intendToApplyHigherTier
         id: e7d51cad-e4ea-4478-a12b-fedf3d18039d
         type: YesNoField
-        title: ''
+        title: Are you interested in a CSHT agreement if your WMP is approved?
         options:
           required: true
           classes: govuk-radios
-        shortDescription: Higher Tier intention
+        shortDescription: Apply for CSHT
 
   # ==========================================
   # Section 2: About your woodland (placeholder)
@@ -449,12 +475,15 @@ pages:
     components:
       - name: landParcels
         type: CheckboxesField
-        title: Select land parcels
-        shortDescription: Select land parcels
+        title: Land parcels
+        shortDescription: Land parcels
     config:
       showSupportDetails: false
       enableMultipleParcelSelect: true
       minimumAreaHa: 0.5
+      invalidates:
+        - hectaresTenOrOverYearsOld
+        - hectaresUnderTenYearsOld
       topSection: |
         <div class="govuk-body">
           <p>
@@ -481,10 +510,9 @@ pages:
           </ul>
 
           <p>
-            To find out more about what land is eligible for a WMP read our
-            <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#landthat-is-eligible-for-a-wmp" class="govuk-link">
-              Applicant's guide: PA3 Woodland management plan 2026 guidance
-            </a>.
+            To find out more about what land is eligible for a WMP read
+            <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#landthat-is-eligible-for-a-wmp" class="govuk-link" target="_blank">
+              Applicant's guide: PA3 Woodland management plan 2026 guidance (opens in new tab)</a>.
           </p>
         </div>
   - title: Enter total area of woodland in your application
@@ -497,16 +525,17 @@ pages:
         id: 1a3b5c7d-9e2f-4a8b-c6d0-e4f2a8b6c0d2
         type: Html
         content: >-
-          <p class="govuk-body">The woodland must be at least 0.5 hectares (ha) in total.</p>
+          <p class="govuk-body">The woodland must be larger than 0.5 hectares (ha) in total.</p>
           <div class="govuk-inset-text">
-           {% if totalHectaresAppliedFor %}
-              The total area of your selected land parcels is {{ totalHectaresAppliedFor }} ha
+           {% if totalHectaresForSelectedParcels %}
+              The total area of your selected land parcels is {{ totalHectaresForSelectedParcels }}ha
            {% else %}
               The total area of your selected land parcels is 0 ha
            {% endif %}
           </div>
           <p class="govuk-body">We use a combination of the total area and age of the eligible woodland in your application to work out what you may get paid.</p>
-          <p class="govuk-body">To find out more about what you'll get paid read our <a href="#" class="govuk-link">Applicant's guide: PA3 Woodland management plan 2026 guidance</a>.</p>
+          <p class="govuk-body">To find out more about what you'll get paid read our
+            <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#whatyoull-get-paid" class="govuk-link" target="_blank">Applicant's guide: PA3 Woodland management plan 2026 guidance (opens in new tab)</a>.</p>
       - name: hectaresTenOrOverYearsOld
         id: 0232c1df-965f-4f41-a271-cb469ca9623a
         type: NumberField
@@ -515,18 +544,26 @@ pages:
           required: true
           classes: govuk-input--width-5
           suffix: ha
+          customValidationMessages:
+            number.precision: Total area of woodland over 10 years old must be 4 decimal places or fewer
+        schema:
+          precision: 4
         shortDescription: Woodland over 10 years old
       - name: hectaresUnderTenYearsOld
         id: b564e6d8-8675-4c9c-9ef8-002199386cf5
         type: NumberField
-        title: Enter total area of newly planted woodland under 10 years old
+        title: Enter total area of new woodland under 10 years old
         options:
           required: false
           classes: govuk-input--width-5
           suffix: ha
-        shortDescription: Newly planted woodland under 10 years old
+          customValidationMessages:
+            number.precision: Total area of new woodland under 10 years old must be 4 decimal places or fewer
+        schema:
+          precision: 4
+        shortDescription: New woodland under 10 years old
 
-  - title: Enter the grid reference for the centre of your woodland
+  - title: Grid reference
     id: df178ed5-da13-4d90-b856-e95f19a92f73
     path: /centre-of-woodland
     section: 38507a39-c936-4c4f-872a-bcbae2eeb7d5
@@ -536,21 +573,39 @@ pages:
         id: 0ecc3968-5293-4a17-adeb-426a51327507
         type: Html
         content: |
-          <p class="govuk-body">To find the grid reference use <a href="https://www.gov.uk/guidance/how-to-access-natural-englands-maps-and-data" class="govuk-link">Natural England’s ‘MAGIC’ map website</a>.</p>
-          <p class="govuk-body">To find out how to get the grid reference read the ‘MAGIC’ guidance on <a href="" class="govuk-link">Using the Where Am I Tool</a>.</p>
-          <p class="govuk-body">The grid reference will be shown as the ‘National Grid Field No’ and include 2 letters and 8 numbers. For example, SP 4178 2432 </p>
+          <p class="govuk-body">To find the grid reference use <a href="https://magic.defra.gov.uk/home.htm" class="govuk-link" target="_blank">Natural England’s ‘MAGIC’ map website (opens in new tab)</a>.</p>
+          <p class="govuk-body">To find out how to get the grid reference read the ‘MAGIC’ guidance on <a href="https://magic.defra.gov.uk/Help_text.htm#WhereAmI" class="govuk-link" target="_blank">Using the Where Am I Tool (opens in new tab)</a>.</p>
       - name: centreGridReference
         id: db02edf0-7c90-4470-a306-55d0f69d217c
         type: NationalGridFieldNumberField
-        title: ''
+        title: Enter the grid reference for the centre of your woodland
+        hint: The grid reference will be shown as the ‘National Grid Field No’ and include 2 letters and 8 numbers. For example, SP 4178 2432
         options:
           required: true
           customValidationMessages:
             string.empty: Enter a grid reference
           classes: govuk-input--width-10
-        shortDescription: Centre of your woodland
+        shortDescription: Grid reference
 
-  - title: Which Forestry Commission team will be advising you?
+  - title: What is the name of your woodland?
+    id: dd82a091-1843-447e-bc7e-35db827873fc
+    path: /woodland-name
+    section: 38507a39-c936-4c4f-872a-bcbae2eeb7d5
+    controller: TaskPageController
+    components:
+      - name: woodlandName
+        id: b0beace7-e0b2-4958-b87f-05cb515097ae
+        title: What is the name of your woodland?
+        hint: This will be used to identify your application and agreement whenever you need to contact us.
+        type: TextField
+        options:
+          required: true
+          customValidationMessages:
+            string.empty: Enter the name of your woodland
+          classes: govuk-input--width-20
+        shortDescription: Name of woodland
+
+  - title: Which Forestry Commission (FC) team will be advising you?
     id: cf70a8f0-7826-4452-ab6c-4e228ebaa334
     path: /which-forestry-commission-team
     section: 38507a39-c936-4c4f-872a-bcbae2eeb7d5
@@ -558,13 +613,13 @@ pages:
     components:
       - name: fcTeamCode
         id: 32ff781f-7960-4269-9294-db77a61a4a92
-        title: Forestry commission team
+        title: Forestry Commission (FC) team
         type: RadiosField
         list: 66450d49-5614-478d-be30-0b1c9ac59c25
         options:
           customValidationMessages:
             any.required: Select the option that applies
-        shortDescription: Forestry commission team
+        shortDescription: Forestry Commission (FC) team
 
   # ==========================================
   # Section 4: Check and submit application
@@ -593,10 +648,10 @@ pages:
         <li>51ha to 100ha: flat rate of £1,500 for the first 50ha, plus £30 for each additional hectare up to and including 100ha</li>
         <li>more than 100ha: flat rate of £3,000, plus £15 for each additional hectare over 100ha</li>
         </ul>
-        <p class="govuk-body">For full details read our <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#whatyoull-get-paid" class="govuk-link">Applicant’s guide: PA3 Woodland management plan 2026 guidance</a>.</p>
-        <p class="govuk-body">Based on the information provided, you may be eligible for a grant of up to {{ totalPayment }}.</p>
+        <p class="govuk-body">For full details read our <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#whatyoull-get-paid" class="govuk-link" target="_blank">Applicant’s guide: PA3 Woodland management plan 2026 guidance (opens in new tab)</a>.</p>
+        <p class="govuk-body">Based on the information provided, you may be eligible for a grant of {{ totalPayment }}.</p>
         <p class="govuk-inset-text">There’s no guarantee you’ll receive a grant</p>
-        <p class="govuk-body">Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the <a href="https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026" class="govuk-link">Capital grants agreements: Terms and conditions 2026</a>. Examples of where the figures may change include amendments to change the size of a parcel and adjustments to a payment rate to eliminate greening double funding.</p>
+        <p class="govuk-body">Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the <a href="https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026" class="govuk-link" target="_blank">Capital grants agreements: Terms and conditions 2026 (opens in new tab)</a>. Examples of where the figures may change include amendments to change the size of a parcel and adjustments to a payment rate to eliminate greening double funding.</p>
   - title: Submit your application
     id: ab194d2a-0b67-4a21-9158-1bd1bbdc4077
     path: /declaration
