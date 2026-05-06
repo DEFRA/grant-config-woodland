@@ -1,5 +1,11 @@
 # grant-config-woodland
 
+## 0.1.1
+
+### Patch Changes
+
+- 7005d86: Update woodland config to latest. Run grants-ui journey tests when config changes
+
 ## 0.1.0
 
 ### Minor Changes
