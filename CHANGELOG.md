@@ -1,5 +1,11 @@
 # grant-config-woodland
 
+## 0.2.0
+
+### Minor Changes
+
+- 7b1be00: Add PA3 action config
+
 ## 0.1.1
 
 ### Patch Changes
