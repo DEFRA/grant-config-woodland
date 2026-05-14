@@ -1,5 +1,11 @@
 # grant-config-woodland
 
+## 0.3.0
+
+### Minor Changes
+
+- 920a586: GSDS-390 move PA3 action from 'grant-config-woodland'
+
 ## 0.2.0
 
 ### Minor Changes
