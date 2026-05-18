@@ -1,5 +1,11 @@
 # grant-config-woodland
 
+## 0.3.1
+
+### Patch Changes
+
+- ff5703f: Release the updates to the GAS config
+
 ## 0.3.0
 
 ### Minor Changes
